@@ -18,7 +18,7 @@ class PaymentController extends Controller
         $provider_fee = 0.29;
         $platform_fee = 0.5;
         //$discount = 0.1;
-        $request->merge(['source' => 'REF'.Str::uuid()]);
+        $request->merge(['reference' => 'REF'.Str::uuid()]);
         $request->merge(['payment_amount' => $request->amount]);
         $request->merge(['total_amount' => $request->amount + $provider_fee + $platform_fee]);
          // TODO: make fee + amount calculation to calculate total amount
@@ -33,9 +33,10 @@ class PaymentController extends Controller
         $payment->create([
             'payment_amount' => $request->payment_amount, 
             'total_amount' => $request->total_amount, 
-            'provider_fee' => $provider_fee, 
-            'platform_fee' => $platform_fee, 
+            'actual_provider_fee' => $provider_fee, 
+            'actual_platform_fee' => $platform_fee, 
             'currency' => $request->currency, 
+            'reference' => $request->reference, 
             'status' => 'initialized',
             'provider_transaction_id' => $response['data']['transactionId'], 
         ]);
@@ -53,19 +54,19 @@ class PaymentController extends Controller
     public function success(Request $request)
     {
         Payment::where('provider_transaction_id', PaymentGateway::transactionId($request))
-                 ->update(['status' =>'success', 'data' => $request->all()]);
+                 ->update(['status' =>'success']);
         return redirect()->to('/payment/success');
     }
     public function cancel(Request $request)
     {
         Payment::where('provider_transaction_id', PaymentGateway::transactionId($request))
-                 ->update(['status' =>'cancel', 'data' => $request->all()]);
+                 ->update(['status' =>'cancel']);
         return redirect()->to('/payment/cancel');
     }
     public function error(Request $request)
     {
         Payment::where('provider_transaction_id', PaymentGateway::transactionId($request))
-                 ->update(['status' =>'error', 'data' => $request->all()]);
+                 ->update(['status' =>'error']);
         return redirect()->to('/payment/error');
     }
 }

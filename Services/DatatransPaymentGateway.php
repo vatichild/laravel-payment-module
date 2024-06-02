@@ -21,7 +21,7 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
 
         $data = [
             'currency' => $request->currency,
-            'refno' => $request->source,
+            'refno' => $request->reference,
             'amount' => $request->total_amount * 100,
             ...config('payment.datatrans.init'),
         ];
