@@ -5,4 +5,5 @@ interface PaymentGatewayInterface
 {
     public function initiateTransaction($request);
     public function charge($request);
+    public function checkTransaction($request);
 }

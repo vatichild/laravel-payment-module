@@ -15,23 +15,27 @@ return new class extends Migration
     {
         Schema::create((new Payment)->getTable(), function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('payout_id')->constrained()->onDelete('set null')->nullable()->default(null); //TODO: ask about this
-            $table->foreignId('user_id')->nullable()->default(null)->constrained()->onDelete('cascade'); //TODO: remove nullable later
-            $table->foreignId('recipient_id')->nullable()->default(null)->constrained()->onDelete('cascade'); //TODO: remove nullable later
+            $table->unsignedBigInteger('payout_id')->nullable()
+                    ->default(null)->constrained()
+                    ->onDelete('set null')
+                    ->comment('Application may have multiple payments on single payout');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade'); //TODO: remove nullable later
+            $table->foreignId('recipient_id')->nullable()->default(null)->constrained()->onDelete('cascade');
             $table->string('recurring_payment_id', 100)->nullable();
-            $table->string('provider_transaction_id', 100)->nullable();
-            $table->double('payment_amount')->nullable();
-            $table->double('actual_platform_fee')->nullable();
-            $table->double('estimated_platform_fee')->nullable(); //TODO: ask about this
-            $table->double('actual_provider_fee')->nullable();
-            $table->double('estimated_provider_fee')->nullable(); //TODO: ask about this
-            $table->double('discount_amount')->nullable();
-            $table->double('total_amount')->nullable();
-            $table->char('currency', 3)->nullable();
-            $table->integer('promo_code_id')->nullable(); //TODO: ask about this
-            $table->integer('business_account_id')->nullable(); //TODO: ask about this
-            $table->string('reference')->nullable(); //TODO: ask about this
-            $table->string('status', 15)->nullable(); //TODO: ask about this
+            $table->string('provider_transaction_id', 100);
+            $table->unsignedBigInteger('payment_amount');
+            $table->unsignedInteger('actual_platform_fee')->nullable();
+            $table->unsignedInteger('estimated_platform_fee');
+            $table->unsignedInteger('actual_provider_fee')->nullable();
+            $table->unsignedInteger('estimated_provider_fee');
+            $table->unsignedInteger('discount_amount')->nullable();
+            $table->unsignedBigInteger('total_amount');
+            $table->char('currency', 3);
+            $table->integer('promo_code_id')->nullable();
+            $table->integer('business_account_id')->nullable();
+            $table->string('ref_no', 50);
+            $table->string('reference')->nullable();
+            $table->string('status', 15);
             $table->timestamps();
             $table->index(
                 [

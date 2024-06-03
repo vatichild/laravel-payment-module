@@ -44,17 +44,12 @@ class PaymentServiceProvider extends ServiceProvider
 
     }
 
-    protected function gatewayConfig($key)
-    {
-       return config('payment.'. config('payment.gateway') .'.'. $key);
-    }
-
     private function defineMacros(): void
     {
         $gateway = config('payment.gateway');
 
         Http::macro($gateway, function () use ($gateway){
-            return  Http::withHeaders(config('payment.'.$gateway.'.headers'))->baseUrl(config('payment.'.$gateway.'.url'));
+            return  Http::withHeaders(config('payment.gateways.'.$gateway.'.headers'))->baseUrl(config('payment.gateways.'.$gateway.'.url'));
         });
     }
 }

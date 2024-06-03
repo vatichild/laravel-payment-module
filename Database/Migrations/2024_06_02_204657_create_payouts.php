@@ -14,11 +14,11 @@ return new class extends Migration
     {
         Schema::create((new Payout)->getTable(), function (Blueprint $table) {
             $table->id();
-            $table->string('provider_id'); //TODO: ask about this
+            $table->string('provider_id')->comment('payout transaction id');
             $table->bigInteger('amount');
             $table->string('balance_transaction_id');
             $table->char('currency', 3);
-            $table->string('destination'); //TODO: ask about this
+            $table->string('destination');
             $table->string('type');
             $table->json('source_object');
             $table->string('reconciliation_status');
