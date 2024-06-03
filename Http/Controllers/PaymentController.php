@@ -55,18 +55,18 @@ class PaymentController extends Controller
     {
         Payment::where('provider_transaction_id', PaymentGateway::transactionId($request))
                  ->update(['status' =>'success']);
-        return redirect()->to('/payment/success');
+        return redirect()->to('/payment-success');
     }
     public function cancel(Request $request)
     {
         Payment::where('provider_transaction_id', PaymentGateway::transactionId($request))
                  ->update(['status' =>'cancel']);
-        return redirect()->to('/payment/cancel');
+        return redirect()->to('/payment-cancel');
     }
     public function error(Request $request)
     {
         Payment::where('provider_transaction_id', PaymentGateway::transactionId($request))
                  ->update(['status' =>'error']);
-        return redirect()->to('/payment/error');
+        return redirect()->to('/payment-error');
     }
 }

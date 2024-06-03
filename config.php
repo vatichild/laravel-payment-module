@@ -20,9 +20,9 @@ return [
                 'createAlias' => true,
             ],
             'redirect' => [
-                "successUrl"=> "https://7620-188-169-130-150.ngrok-free.app/datatrans/success",
-                "cancelUrl"=> "https://7620-188-169-130-150.ngrok-free.app/datatrans/cancel",
-                "errorUrl" => "https://7620-188-169-130-150.ngrok-free.app/datatrans/error"
+                "successUrl"=> "https://0c76-188-169-130-150.ngrok-free.app/payment/success",
+                "cancelUrl"=> "https://0c76-188-169-130-150.ngrok-free.app/payment/cancel",
+                "errorUrl" => "https://0c76-188-169-130-150.ngrok-free.app/payment/error"
             ],
             "theme" => [
                 "name" => "DT2015", 
