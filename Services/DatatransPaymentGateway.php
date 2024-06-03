@@ -8,12 +8,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Modules\Payment\Contracts\PaymentGatewayInterface;
+use Modules\Payment\Facades\PaymentGateway;
 
 class DatatransPaymentGateway implements PaymentGatewayInterface
 {
-    const SETTLED = 'settled';
+    const SUCCEEDED = 'settled';
     const CANCELED = 'canceled';
-    const DECLINED = 'declined';
+    const FAILED = 'failed';
 
     /**
      * Initiate transaction to get transactionId before proceed to payment
@@ -45,15 +46,16 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
     }
 
     /**
-     * Check transaction status, alias
+     * Check transaction status and get alias
      * @param $request
-     * @return array|mixed
+     * @param bool $returnData
+     * @return array
      */
-    public function checkTransaction($request): mixed
+    public function checkTransaction($request, bool $returnData = false): array
     {
         $response = Http::datatrans()->get('transactions/' . self::transactionId($request));
         $checkedResponse = $this->checkResponse($response);
-        if ($checkedResponse['status'] === 'success') {
+        if ($returnData && $checkedResponse['status'] === 'success') {
             return $checkedResponse['data'];
         }
         return $checkedResponse;
@@ -76,12 +78,12 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
         }
 
         $data = $request->only(['currency', 'refno', 'card', 'autoSettle']);
-        
+
         $data['amount'] = $request->total_amount * 100;
 
         $response = Http::datatrans()->post('transactions/authorize', $data);
 
-        return $this->checkResponse($response);
+        return $this->checkResponse($response, true);
     }
 
     /**
@@ -91,7 +93,7 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
      */
     public function transactionId($request): string
     {
-        return $request->input('datatransTrxId');
+        return $request->input('transactionId');
     }
 
 
@@ -160,10 +162,11 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
     /**
      * Check the response from an HTTP request and return the status and data or errors.
      *
-     * @param Response $response The HTTP response object.
-     * @return array An array containing the status and data or errors.
+     * @param Response $response
+     * @param bool $checkTransaction
+     * @return array
      */
-    private function checkResponse(Response $response): array
+    private function checkResponse(Response $response, bool $checkTransaction = false): array
     {
         if ($response->failed()) {
             $error = $response->json()['error'] ?? 'Unknown error';
@@ -175,6 +178,10 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
                 'status' => 'error',
                 'errors' => $error
             ];
+        }
+
+        if ($checkTransaction) {
+            return PaymentGateway::checkTransaction(new \Illuminate\Http\Request($response->json()));
         }
 
         return [

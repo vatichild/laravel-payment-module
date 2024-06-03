@@ -6,6 +6,10 @@ use Modules\Payment\Contracts\PaymentGatewayInterface;
 
 class StripePaymentGateway implements PaymentGatewayInterface
 {
+    const SUCCEEDED = 'succeeded';
+    const CANCELED = 'canceled';
+    const FAILED = 'failed';
+
     public function initiateTransaction($request): array
     {
         // Stripe init logic here...

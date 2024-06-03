@@ -8,7 +8,7 @@ interface PaymentGatewayInterface
 
     public function charge($request): array;
 
-    public function checkTransaction($request): array;
+    public function checkTransaction($request, bool $returnData = false): array;
 
     public function transactionId($request): string;
 

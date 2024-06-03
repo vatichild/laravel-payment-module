@@ -77,10 +77,10 @@ class PaymentRepository
      * TODO: Update user_id to real users
      * Create payment
      * @param $request
-     * @param $initiateResponse
+     * @param $response
      * @return void
      */
-    public function createPayment($request, $initiateResponse): void
+    public function createPayment($request, $response): void
     {
         Payment::create([
             'user_id' => 1,
@@ -91,8 +91,8 @@ class PaymentRepository
             'currency' => $request->currency,
             'reference' => "Private payment",
             'ref_no' => $request->ref_no,
-            'status' => $request->status,
-            'provider_transaction_id' => $initiateResponse['data']['transactionId'],
+            'status' => $response['data']['status'] ?? $request->status,
+            'provider_transaction_id' => $response['data']['transactionId'],
         ]);
     }
 
@@ -105,8 +105,8 @@ class PaymentRepository
      */
     protected function handleSuccess($request): void
     {
-        $data = PaymentGateway::checkTransaction($request);
-        if ($data['status'] === app()->make(PaymentGatewayInterface::class)::SETTLED) {
+        $data = PaymentGateway::checkTransaction($request, true);
+        if ($data['status'] === app()->make(PaymentGatewayInterface::class)::SUCCEEDED) {
             $default = !PaymentMethod::where('user_id', 1)->count();
             if (!PaymentMethod::where('user_id', 1)->where('last', PaymentGateway::getLastDigits($data))->count()) {
                 PaymentMethod::create(PaymentGateway::normalizeData($data, 1, $default));
@@ -118,14 +118,16 @@ class PaymentRepository
     /**
      * Prepare request data for payment record
      * @param $request
+     * @param string $status
      * @return void
      */
-    protected function prepareForPayment($request): void
+    protected function prepareForPayment($request, string $status = 'initialized'): void
     {
         // TODO: make fee + amount calculation to calculate total amount
         $provider_fee = 0.29;
         $platform_fee = 0.5;
         //$discount = 0.1;
+        $request->merge(['status' => $status]);
         $request->merge(['ref_no' => 'REF' . Str::uuid()]);
         $request->merge(['payment_amount' => $request->amount]);
         $request->merge(['estimated_provider_fee' => $provider_fee]);
