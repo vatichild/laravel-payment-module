@@ -1,10 +1,12 @@
 <?php
+
 namespace Modules\Payment\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
-class Payment extends Model {
+class Payment extends Model
+{
 
     /**
      * The attributes that are mass assignable.
@@ -44,11 +46,11 @@ class Payment extends Model {
         'formatted_total_fee',
         'formatted_total_amount'
     ];
-    
+
     /**
      * Cast the payment amount attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
     protected function paymentAmount(): Attribute
     {
@@ -58,8 +60,8 @@ class Payment extends Model {
     /**
      * Cast the estimated platform fee attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
-     */   
+     * @return Attribute
+     */
     protected function estimatedPlatformFee(): Attribute
     {
         return $this->normalizeAmount();
@@ -68,17 +70,17 @@ class Payment extends Model {
     /**
      * Cast the estimated provider fee attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
     protected function estimatedProviderFee(): Attribute
     {
         return $this->normalizeAmount();
     }
 
-     /**
+    /**
      * Cast the total amount attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
     protected function totalAmount(): Attribute
     {
@@ -89,17 +91,17 @@ class Payment extends Model {
     /**
      * Cast the formatted payment amount attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
     protected function formattedPaymentAmount(): Attribute
     {
         return $this->formatAmount($this->payment_amount);
     }
 
-     /**
+    /**
      * Cast the formatted estimated platform fee attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
     protected function formattedEstimatedPlatformFee(): Attribute
     {
@@ -109,7 +111,7 @@ class Payment extends Model {
     /**
      * Cast the formatted estimated provider fee attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
     protected function formattedEstimatedProviderFee(): Attribute
     {
@@ -119,7 +121,7 @@ class Payment extends Model {
     /**
      * Cast the formatted total amount attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
     protected function formattedTotalAmount(): Attribute
     {
@@ -129,7 +131,7 @@ class Payment extends Model {
     /**
      * Cast the formatted total fee attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
     protected function formattedTotalFee(): Attribute
     {
@@ -139,27 +141,27 @@ class Payment extends Model {
     /**
      * Normalize the amount attribute.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
-    private function normalizeAmount()
+    private function normalizeAmount(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $value / 100,
-            set: fn ($value) => $value * 100,
+            get: fn($value) => $value / 100,
+            set: fn($value) => $value * 100,
         );
     }
 
     /**
      * Format the amount attribute.
      *
-     * @param mixed $value The value to format.
+     * @param int $value The value to format.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return Attribute
      */
-    private function formatAmount($value)
+    private function formatAmount(int $value): Attribute
     {
         return Attribute::make(
-            get: fn () => number_format($value, 2)
+            get: fn() => number_format($value, 2)
         );
     }
 }

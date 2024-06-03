@@ -1,6 +1,8 @@
 <?php
+
 namespace Modules\Payment\Services;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -13,12 +15,16 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
     const CANCELED = 'canceled';
     const DECLINED = 'declined';
 
-    public function initiateTransaction($request)
+    /**
+     * Initiate transaction to get transactionId before proceed to payment
+     * @param $request
+     * @return array
+     */
+    public function initiateTransaction($request): array
     {
-        // Validate the request
         $validator = $this->validateRequest($request);
 
-        if($validator->fails()) {
+        if ($validator->fails()) {
             return [
                 'status' => 'error',
                 'errors' => $validator->errors()
@@ -38,31 +44,66 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
         return $this->checkResponse($response);
     }
 
-    public function checkTransaction($request)
+    /**
+     * Check transaction status, alias
+     * @param $request
+     * @return array|mixed
+     */
+    public function checkTransaction($request): mixed
     {
-        $response = Http::datatrans()->get('transactions/'.self::transactionId($request));
+        $response = Http::datatrans()->get('transactions/' . self::transactionId($request));
         $checkedResponse = $this->checkResponse($response);
-        if($checkedResponse['status'] ==='success'){
+        if ($checkedResponse['status'] === 'success') {
             return $checkedResponse['data'];
         }
         return $checkedResponse;
     }
 
-    public function charge($payload)
+    /**
+     * Charge user from saved card/payment method
+     * @param $request
+     * @return array
+     */
+    public function charge($request): array
     {
-        $data = $payload->only(['currency','refno','card','autoSettle']);
-        $data['amount'] = $payload->total_amount * 100;
+        $validator = $this->validateRequest($request);
+
+        if ($validator->fails()) {
+            return [
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ];
+        }
+
+        $data = $request->only(['currency', 'refno', 'card', 'autoSettle']);
+        
+        $data['amount'] = $request->total_amount * 100;
+
         $response = Http::datatrans()->post('transactions/authorize', $data);
+
         return $this->checkResponse($response);
     }
 
-    public function transactionId($request)
+    /**
+     * Get transaction id
+     * @param $request
+     * @return mixed
+     */
+    public function transactionId($request): string
     {
         return $request->input('datatransTrxId');
     }
 
 
-    public function normalizeData($data, $user_id, $default = false){
+    /**
+     * Normalize data from datatrans to module db table/model
+     * @param $data
+     * @param $user_id
+     * @param bool $default
+     * @return array
+     */
+    public function normalizeData($data, $user_id, $default = false): array
+    {
         $card = $data['card'];
         return [
             'user_id' => $user_id,
@@ -76,22 +117,39 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function unnormalizeData($data)
+    /**
+     * Make data readable for datatrans endpoint
+     * @param $data
+     * @return array[]
+     */
+    public function unnormalizeData($data): array
     {
-        return ['card' => [
-            'alias' => $data->payment_method_id,
-            'expiryYear' => $data->exp_year,
-            'expiryMonth' => $data->exp_month,
-        ]];
+        return [
+            'card' => [
+                'alias' => $data->payment_method_id,
+                'expiryYear' => $data->exp_year,
+                'expiryMonth' => $data->exp_month,
+            ]
+        ];
     }
 
-    public function getLastDigits($data)
+    /**
+     * Get last 4 digits from masked payment method/card
+     * @param $data
+     * @return string
+     */
+    public function getLastDigits($data): string
     {
         return Str::substr($data['card']['masked'], -4);
     }
 
 
-    private function validateRequest($request)
+    /**
+     * Validate payment required fields
+     * @param $request
+     * @return \Illuminate\Validation\Validator
+     */
+    private function validateRequest($request): \Illuminate\Validation\Validator
     {
         return Validator::make($request->all(), [
             'amount' => ['required', 'numeric'],
@@ -102,23 +160,23 @@ class DatatransPaymentGateway implements PaymentGatewayInterface
     /**
      * Check the response from an HTTP request and return the status and data or errors.
      *
-     * @param \Illuminate\Http\Client\Response $response The HTTP response object.
+     * @param Response $response The HTTP response object.
      * @return array An array containing the status and data or errors.
      */
-    private function checkResponse($response): array
+    private function checkResponse(Response $response): array
     {
         if ($response->failed()) {
             $error = $response->json()['error'] ?? 'Unknown error';
             $statusCode = $response->status();
-    
+
             Log::error('API Request failed', ['status_code' => $statusCode, 'error' => $error]);
-    
+
             return [
                 'status' => 'error',
                 'errors' => $error
             ];
         }
-    
+
         return [
             'status' => 'success',
             'data' => $response->json()

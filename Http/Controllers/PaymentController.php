@@ -2,13 +2,14 @@
 
 namespace Modules\Payment\Http\Controllers;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Modules\Payment\Repositories\PaymentRepository;
 
 class PaymentController extends Controller
 {
-    protected $paymentRepository;
+    protected PaymentRepository $paymentRepository;
 
     public function __construct(PaymentRepository $paymentRepository)
     {
@@ -25,6 +26,9 @@ class PaymentController extends Controller
         return $this->paymentRepository->charge($request, $user_id);
     }
 
+    /**
+     * @throws BindingResolutionException
+     */
     public function handleWebhook(Request $request, $status)
     {
         return $this->paymentRepository->handleWebhook($request, $status);
